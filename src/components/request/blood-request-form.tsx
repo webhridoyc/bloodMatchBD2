@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import { addRequest, type NewRequestData } from "@/services/requestService"; // Import Firestore service
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/auth-context"; // Import useAuth
 
 const phoneRegex = new RegExp(
   /^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/
@@ -46,6 +47,7 @@ export function BloodRequestForm() {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth(); // Get current user from auth context
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,11 +61,11 @@ export function BloodRequestForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true); 
+    setIsSubmitting(true);
     try {
       const requestData: NewRequestData = {
         ...values,
-        postedDate: new Date().toISOString(), 
+        postedDate: new Date().toISOString(),
       };
       await addRequest(requestData);
 
@@ -76,8 +78,13 @@ export function BloodRequestForm() {
     } catch (error) {
       console.error("Client-side blood request submission error:", error);
       let description = "Could not post request. Please try again.";
-      if (error instanceof Error && error.message) {
+      if (error instanceof Error) {
         description = error.message;
+        // Check for permission denied error specifically
+        if (error.message.toLowerCase().includes("permission denied")) {
+          console.log("Permission denied. Current user auth state:", user); // Log user auth state
+          description = "Permission denied. Please ensure you are logged in and check Firestore security rules.";
+        }
       } else if (typeof error === 'string') {
         description = error;
       } else if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
@@ -89,7 +96,7 @@ export function BloodRequestForm() {
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false); 
+      setIsSubmitting(false);
     }
   }
 
