@@ -1,7 +1,8 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Droplets, Users, Search, HandHeart, ListChecks, HospitalIcon, Brain } from 'lucide-react';
+import { Droplets, Users, Search, HandHeart, ListChecks, HospitalIcon, Brain, FileText } from 'lucide-react';
 import { PageTitle } from '@/components/shared/page-title';
 import { APP_NAME, APP_DESCRIPTION } from '@/lib/constants';
 
@@ -10,7 +11,7 @@ export default function HomePage() {
     <div className="container mx-auto">
       <PageTitle title={`Welcome to ${APP_NAME}!`} description={APP_DESCRIPTION} />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-primary">
@@ -52,16 +53,29 @@ export default function HomePage() {
             </Link>
           </CardContent>
         </Card>
+
+        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-primary">
+              <ListChecks size={24} /> View Active Requests
+            </CardTitle>
+            <CardDescription>Browse all current blood requests from users across different locations.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/requests" passHref>
+              <Button className="w-full" variant="outline">See Requests</Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="mt-12">
         <h2 className="text-2xl font-semibold mb-4 text-center text-primary">Explore More</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            { title: "Active Requests", href: "/requests", icon: ListChecks, description: "View current blood needs." },
             { title: "Hospital Directory", href: "/hospitals", icon: HospitalIcon, description: "Find hospitals near you." },
             { title: "AI Matcher", href: "/ai-matcher", icon: Brain, description: "Get AI-powered donor suggestions." },
-            { title: "AI Summary", href: "/ai-summary", icon: Droplets, description: "Overview of current requests." },
+            { title: "AI Summary", href: "/ai-summary", icon: FileText, description: "Overview of current requests." },
           ].map(item => (
             <Link href={item.href} key={item.title} passHref>
               <Card className="text-center hover:bg-accent/10 transition-colors">
