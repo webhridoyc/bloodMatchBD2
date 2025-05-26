@@ -21,7 +21,7 @@ export default function HomePage() {
           </CardHeader>
           <CardContent>
             <Link href="/donors" passHref>
-              <Button className="w-full">Browse Donors</Button>
+              <Button className="w-full" variant="default">Browse Donors</Button>
             </Link>
           </CardContent>
         </Card>
@@ -49,7 +49,7 @@ export default function HomePage() {
           </CardHeader>
           <CardContent>
             <Link href="/donor-registration" passHref>
-              <Button className="w-full" variant="outline">Register Now</Button>
+              <Button className="w-full" variant="default">Register Now</Button>
             </Link>
           </CardContent>
         </Card>
@@ -63,7 +63,7 @@ export default function HomePage() {
           </CardHeader>
           <CardContent>
             <Link href="/requests" passHref>
-              <Button className="w-full" variant="outline">See Requests</Button>
+              <Button className="w-full" variant="default">See Requests</Button>
             </Link>
           </CardContent>
         </Card>
