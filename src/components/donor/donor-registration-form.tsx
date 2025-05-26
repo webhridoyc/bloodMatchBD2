@@ -68,18 +68,22 @@ export function DonorRegistrationForm() {
       });
       // form.reset(); // Optionally reset form fields
       router.push('/donors'); 
-    } catch (error) {
+    } catch (error: any) { // Use 'any' to access potential 'digest' property
       console.error("Client-side donor registration error:", error);
       let description = "Could not register donor. Please try again.";
-      if (error instanceof Error && error.message) {
+      if (error instanceof Error) {
         description = error.message;
       } else if (typeof error === 'string') {
-        // If the error is just a string
         description = error;
-      } else if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
-        // If it's an object with a message property
-        description = (error as any).message;
+      } else if (typeof error === 'object' && error !== null && 'message'in error && typeof error.message === 'string') {
+        description = error.message;
       }
+
+      // If it's a Next.js server action error with a digest
+      if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string') {
+        description += ` (Server Error Digest: ${error.digest}. Check server logs for details.)`;
+      }
+
       toast({
         title: "Registration Failed",
         description: description,

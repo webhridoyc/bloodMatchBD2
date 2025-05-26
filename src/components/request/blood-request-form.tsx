@@ -75,21 +75,28 @@ export function BloodRequestForm() {
       });
       console.log("Request successful, redirecting to /requests");
       router.push('/requests');
-    } catch (error) {
+    } catch (error: any) { // Use 'any' to access potential 'digest' property
       console.error("Client-side blood request submission error:", error);
       let description = "Could not post request. Please try again.";
       if (error instanceof Error) {
         description = error.message;
         // Check for permission denied error specifically
         if (error.message.toLowerCase().includes("permission denied")) {
-          console.log("Permission denied. Current user auth state:", user); // Log user auth state
-          description = "Permission denied. Please ensure you are logged in and check Firestore security rules.";
+          console.log("Permission denied. Current user auth state:", user);
+          // This description is already specific enough from the service
+          // description = "Permission denied. Please ensure you are logged in and check Firestore security rules.";
         }
       } else if (typeof error === 'string') {
         description = error;
-      } else if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
-        description = (error as any).message;
+      } else if (typeof error === 'object' && error !== null && 'message'in error && typeof error.message === 'string') {
+        description = error.message;
       }
+
+      // If it's a Next.js server action error with a digest
+      if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string') {
+         description += ` (Server Error Digest: ${error.digest}. Check server logs for details.)`;
+      }
+      
       toast({
         title: "Request Failed",
         description: description,
