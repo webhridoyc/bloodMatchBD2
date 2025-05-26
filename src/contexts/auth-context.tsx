@@ -9,6 +9,7 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signOut as firebaseSignOut,
+  updateProfile, // Import updateProfile
   type AuthError
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -18,8 +19,9 @@ import { useRouter } from 'next/navigation';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  setLoading: Dispatch<SetStateAction<boolean>>; // Expose setLoading if needed by other components like EditProfile
   error: string | null;
-  signUp: (email: string, pass: string) => Promise<boolean>;
+  signUp: (email: string, pass: string, displayName: string) => Promise<boolean>;
   logIn: (email: string, pass: string) => Promise<boolean>;
   logOut: () => Promise<void>;
   setError: Dispatch<SetStateAction<string | null>>;
@@ -42,11 +44,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const signUp = async (email: string, pass: string): Promise<boolean> => {
+  const signUp = async (email: string, pass: string, displayName: string): Promise<boolean> => {
     setLoading(true);
     setError(null);
     try {
-      await createUserWithEmailAndPassword(auth, email, pass);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      // After user is created, update their profile with the display name
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, { displayName });
+      }
       toast({ title: "Signup Successful", description: "You have been registered." });
       router.push('/'); // Redirect to home or profile page
       return true;
@@ -97,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
     user,
     loading,
+    setLoading, // Expose setLoading
     error,
     signUp,
     logIn,
