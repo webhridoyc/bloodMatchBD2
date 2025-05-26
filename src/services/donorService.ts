@@ -4,6 +4,7 @@
 import { collection, addDoc, getDocs, serverTimestamp, query, orderBy } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import type { Donor, BloodGroup } from '@/types';
+import { BLOOD_GROUPS } from "@/lib/constants"; // Import BLOOD_GROUPS
 
 const donorsCollectionRef = collection(db, 'donors');
 
@@ -27,46 +28,43 @@ export async function addDonor(donorData: NewDonorData): Promise<string> {
 
     let errorMessage = "Failed to register donor due to a server-side issue. Please check server logs and try again later.";
     if (error instanceof Error) {
-      // Check for specific Firebase error codes if available, e.g., error.code
-      // For a generic timeout or unreachability, the message might be vague.
       if (error.message.toLowerCase().includes('deadline_exceeded') || error.message.toLowerCase().includes('timeout')) {
         errorMessage = "Failed to register donor: The request to the database timed out. This might be a temporary network issue or a problem with the database service. Please try again shortly.";
       } else if (error.message.toLowerCase().includes('permission_denied') || (error as any).code === 'permission-denied') {
          errorMessage = "Failed to register donor: Database permission denied. Please check your Firestore security rules and server configuration.";
       } else {
-        // Include the original error message for more context if it's not one of the above
         errorMessage = `Failed to register donor: ${error.message}. Please try again later.`;
       }
     }
-    // This error will be caught by the client-side form if the Server Action itself doesn't time out first.
     throw new Error(errorMessage);
   }
 }
 
 export async function getDonors(): Promise<Donor[]> {
   try {
-    // Example: Order donors by name. You can add more complex queries or ordering.
-    const q = query(donorsCollectionRef, orderBy("name")); 
+    const q = query(donorsCollectionRef, orderBy("name"));
     const querySnapshot = await getDocs(q);
-    
+
     const donors = querySnapshot.docs.map(doc => {
       const data = doc.data();
-      // Ensure all fields of Donor type are present, provide defaults or handle missing fields if necessary
+      let validBloodGroup = data.bloodGroup as BloodGroup;
+      if (!BLOOD_GROUPS.includes(data.bloodGroup)) {
+        console.warn(`Invalid blood group '${data.bloodGroup}' for donor ID ${doc.id}. Defaulting to A+.`);
+        validBloodGroup = "A+"; // Default to a valid blood group
+      }
+
       return {
         id: doc.id,
         name: data.name || 'N/A',
-        bloodGroup: data.bloodGroup || 'Unknown',
+        bloodGroup: validBloodGroup,
         location: data.location || 'N/A',
         contact: data.contact || 'N/A',
-        // If you added createdAt and want to convert it:
-        // createdAt: data.createdAt?.toDate().toISOString() || new Date().toISOString(), 
       } as Donor;
     });
     return donors;
   } catch (error) {
-    console.error("Error fetching donors from Firestore: ", error);
-    // Depending on usage, you might want to return empty array or re-throw
-    // For client components, it's often better to return empty or a specific error state.
-    throw new Error("Failed to fetch donors. Please try again later.");
+    console.error("Error fetching donors from Firestore in donorService: ", error);
+    // Return empty array instead of throwing to prevent page crash
+    return [];
   }
 }
