@@ -1,3 +1,4 @@
+
 // match-suggestions.ts
 'use server';
 /**
@@ -69,7 +70,23 @@ const suggestMatchesFlow = ai.defineFlow(
     outputSchema: SuggestMatchesOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      if (!output) {
+        console.warn("AI prompt for match suggestions returned no output. Input:", input);
+        // Return an empty array of suggestions, which conforms to the output schema.
+        return { suggestedDonors: [] };
+      }
+      return output;
+    } catch (error) {
+      console.error("Error in suggestMatchesFlow:", error, "Input:", input);
+      // Re-throw the error to be caught by Next.js error handling or a higher-level catcher.
+      // Or, to be more graceful to the client, return a default valid output:
+      // return { suggestedDonors: [] };
+      // For now, re-throwing to make sure errors are visible.
+      // If this still causes "unexpected response", then we might return { suggestedDonors: [] } here too.
+      throw error; 
+    }
   }
 );
+

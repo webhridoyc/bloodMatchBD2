@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates a summary of the current blood requests, including location and blood type.
@@ -47,7 +48,21 @@ const summarizeRequestsFlow = ai.defineFlow(
     outputSchema: SummaryOfRequestsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const {output} = await prompt(input);
+      if (!output) {
+        console.warn("AI prompt for summary of requests returned no output. Input:", input);
+        // Return a default summary message, which conforms to the output schema.
+        return { summary: "Could not generate summary at this time. The AI model did not provide a response." };
+      }
+      return output;
+    } catch (error) {
+      console.error("Error in summarizeRequestsFlow:", error, "Input:", input);
+      // Re-throw or return a default summary
+      // return { summary: "An error occurred while generating the summary." };
+      // For now, re-throwing to ensure errors are visible.
+      throw error;
+    }
   }
 );
+
