@@ -16,7 +16,9 @@ async function getDonorsData(): Promise<Donor[]> {
     return donors;
   } catch (error) {
     console.error("Failed to fetch donors for DonorsPage:", error);
-    return []; // Return empty array or handle error as appropriate for your UI
+    // Return empty array or handle error as appropriate for your UI
+    // This prevents the page from crashing if data fetching fails.
+    return [];
   }
 }
 
