@@ -19,8 +19,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BloodGroupSelect, UrgencySelect } from "@/components/shared/form-elements";
 import type { BloodGroup, UrgencyLevel } from "@/types";
-import { mockRequests } from "@/lib/data"; // For demo purposes
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation";
+import { addRequest, type NewRequestData } from "@/services/requestService"; // Import Firestore service
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 const phoneRegex = new RegExp(
   /^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/
@@ -42,32 +44,45 @@ const formSchema = z.object({
 
 export function BloodRequestForm() {
   const { toast } = useToast();
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       patientName: "",
       location: "",
       contact: "",
-      hospitalName: "", 
-      notes: "",       
+      hospitalName: "",
+      notes: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    const newRequest = { 
-      ...values, 
-      id: `REQ${Date.now()}`, 
-      postedDate: new Date().toISOString() 
-    };
-    mockRequests.push(newRequest); // Adding to mockRequests for demo
-    console.log("New Blood Request Posted:", newRequest);
-    toast({
-      title: "Request Posted Successfully",
-      description: `Your blood request for ${values.patientName} has been posted.`,
-    });
-    // form.reset(); // Reset form before redirecting or after, depending on desired UX
-    router.push('/requests'); // Redirect to requests list page
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    try {
+      const requestData: NewRequestData = {
+        ...values,
+        postedDate: new Date().toISOString(), // Set current date as ISO string
+        // hospitalName and notes are already included if present due to ...values
+      };
+      await addRequest(requestData);
+
+      toast({
+        title: "Request Posted Successfully",
+        description: `Your blood request for ${values.patientName} has been posted.`,
+      });
+      router.push('/requests');
+    } catch (error) {
+      console.error("Blood request error:", error);
+      toast({
+        title: "Request Failed",
+        description: (error as Error).message || "Could not post request. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -98,9 +113,9 @@ export function BloodRequestForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Required Blood Group</FormLabel>
-                  <BloodGroupSelect 
-                    onChange={field.onChange as (value: BloodGroup) => void} 
-                    value={field.value as BloodGroup} 
+                  <BloodGroupSelect
+                    onChange={field.onChange as (value: BloodGroup) => void}
+                    value={field.value as BloodGroup}
                   />
                   <FormMessage />
                 </FormItem>
@@ -125,9 +140,9 @@ export function BloodRequestForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Urgency Level</FormLabel>
-                   <UrgencySelect 
-                    onChange={field.onChange as (value: UrgencyLevel) => void} 
-                    value={field.value as UrgencyLevel} 
+                   <UrgencySelect
+                    onChange={field.onChange as (value: UrgencyLevel) => void}
+                    value={field.value as UrgencyLevel}
                   />
                   <FormMessage />
                 </FormItem>
@@ -172,8 +187,12 @@ export function BloodRequestForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Posting..." : "Post Request"}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
+                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Posting...</>
+              ) : (
+                "Post Request"
+              )}
             </Button>
           </form>
         </Form>
