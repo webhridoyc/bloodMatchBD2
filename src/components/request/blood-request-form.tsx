@@ -46,6 +46,8 @@ export function BloodRequestForm() {
       patientName: "",
       location: "",
       contact: "",
+      hospitalName: "", // Initialize optional field
+      notes: "",       // Initialize optional field
     },
   });
 
