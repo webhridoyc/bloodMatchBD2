@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import type { BloodRequest } from '@/types';
 
+export const dynamic = 'force-dynamic'; // Add this line to ensure dynamic rendering
+
 // This page will be a server component fetching data from Firestore
 async function getRequestsData(): Promise<BloodRequest[]> {
   try {
@@ -15,7 +17,7 @@ async function getRequestsData(): Promise<BloodRequest[]> {
   } catch (error) {
     console.error("Failed to fetch blood requests for RequestsPage:", error);
     // Depending on UI requirements, you might show an error message or an empty state
-    return []; 
+    return [];
   }
 }
 

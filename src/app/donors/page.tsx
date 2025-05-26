@@ -7,6 +7,8 @@ import { PlusCircle } from 'lucide-react';
 import { getDonors as fetchDonorsFromDb } from '@/services/donorService'; // Import Firestore service
 import type { Donor } from '@/types';
 
+export const dynamic = 'force-dynamic'; // Add this line to ensure dynamic rendering
+
 // This page will be a server component fetching data from Firestore
 async function getDonorsData(): Promise<Donor[]> {
   try {
@@ -23,8 +25,8 @@ export default async function DonorsPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <PageTitle 
-        title="Available Donors" 
+      <PageTitle
+        title="Available Donors"
         description="Find registered blood donors. Use filters to narrow down your search."
         actions={
           <Link href="/donor-registration" passHref>
