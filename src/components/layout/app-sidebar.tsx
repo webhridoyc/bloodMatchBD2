@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -14,6 +15,9 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
+  LogIn,
+  LogOut,
+  UserCircle,
   type LucideIcon
 } from 'lucide-react';
 import {
@@ -27,20 +31,24 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   useSidebar,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { Logo } from './logo';
-import { cn } from '@/lib/utils';
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/auth-context';
+import { Button } from '../ui/button'; // Ensure Button is imported if used standalone
 
 interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
   subItems?: NavItem[];
+  authRequired?: boolean; // true if shown only when logged in
+  noAuthRequired?: boolean; // true if shown only when logged out
+  action?: () => void; // For logout button
 }
 
-const navItems: NavItem[] = [
+const mainNavItems: NavItem[] = [
   { href: '/', label: 'Home', icon: Home },
   {
     href: '#', label: 'Find Blood', icon: Users, subItems: [
@@ -68,6 +76,7 @@ export function AppSidebar() {
   const { state: sidebarState } = useSidebar();
   const isCollapsed = sidebarState === 'collapsed';
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+  const { user, logOut, loading: authLoading } = useAuth();
 
   const toggleMenu = (label: string) => {
     setOpenMenus(prev => ({ ...prev, [label]: !prev[label] }));
@@ -78,8 +87,18 @@ export function AppSidebar() {
       setOpenMenus({});
     }
   }, [isCollapsed]);
+  
+  const authNavItems: NavItem[] = [
+    { href: '/profile', label: 'Profile', icon: UserCircle, authRequired: true },
+    { href: '/login', label: 'Login', icon: LogIn, noAuthRequired: true },
+    { href: '/signup', label: 'Sign Up', icon: UserPlus, noAuthRequired: true },
+    // Logout is handled as a button, not a NavItem with href
+  ];
 
   const renderNavItem = (item: NavItem, isSubItem = false) => {
+    if (item.authRequired && !user) return null;
+    if (item.noAuthRequired && user) return null;
+
     const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
     const Icon = item.icon;
     const isOpen = openMenus[item.label] ?? false;
@@ -138,7 +157,19 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {navItems.map(item => renderNavItem(item))}
+          {mainNavItems.map(item => renderNavItem(item))}
+        </SidebarMenu>
+        <SidebarSeparator className="my-4" />
+        <SidebarMenu>
+          {authNavItems.map(item => renderNavItem(item))}
+          {user && (
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={logOut} disabled={authLoading} tooltip={isCollapsed ? "Logout" : undefined}>
+                <LogOut />
+                {!isCollapsed && <span>Logout</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarContent>
     </Sidebar>
