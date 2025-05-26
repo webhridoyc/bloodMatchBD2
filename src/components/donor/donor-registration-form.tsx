@@ -66,6 +66,7 @@ export function DonorRegistrationForm() {
         title: "Registration Successful",
         description: `${values.name} has been registered as a donor.`,
       });
+      // form.reset(); // Optionally reset form fields
       router.push('/donors'); 
     } catch (error) {
       console.error("Donor registration error:", error);

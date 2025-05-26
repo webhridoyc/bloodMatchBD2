@@ -53,8 +53,8 @@ export function BloodRequestForm() {
       patientName: "",
       location: "",
       contact: "",
-      hospitalName: "",
-      notes: "",
+      hospitalName: "", // Ensure optional fields are initialized
+      notes: "",       // Ensure optional fields are initialized
     },
   });
 
@@ -72,6 +72,7 @@ export function BloodRequestForm() {
         title: "Request Posted Successfully",
         description: `Your blood request for ${values.patientName} has been posted.`,
       });
+      // form.reset(); // Optionally reset form fields
       router.push('/requests');
     } catch (error) {
       console.error("Blood request error:", error);
