@@ -1,14 +1,10 @@
 {
   "hosting": {
-    "site": "bloodmatch-bd2",
-    "source": ".",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "frameworksBackend": {
-      "region": "asia-southeast1"
-    }
+    ]
   }
 }
