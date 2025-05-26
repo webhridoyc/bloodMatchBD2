@@ -18,14 +18,28 @@ export type NewDonorData = {
 
 export async function addDonor(donorData: NewDonorData): Promise<string> {
   try {
-    // If you want to add a server-side timestamp for when the donor was created:
-    // const docRef = await addDoc(donorsCollectionRef, { ...donorData, createdAt: serverTimestamp() });
     const docRef = await addDoc(donorsCollectionRef, donorData);
-    console.log("Donor added with ID: ", docRef.id);
+    console.log("Donor (server) added with ID: ", docRef.id);
     return docRef.id;
   } catch (error) {
-    console.error("Error adding donor to Firestore: ", error);
-    throw new Error("Failed to register donor. Please try again.");
+    // Log the detailed error on the server for debugging
+    console.error("Firestore 'addDonor' service error:", error);
+
+    let errorMessage = "Failed to register donor due to a server-side issue. Please check server logs and try again later.";
+    if (error instanceof Error) {
+      // Check for specific Firebase error codes if available, e.g., error.code
+      // For a generic timeout or unreachability, the message might be vague.
+      if (error.message.toLowerCase().includes('deadline_exceeded') || error.message.toLowerCase().includes('timeout')) {
+        errorMessage = "Failed to register donor: The request to the database timed out. This might be a temporary network issue or a problem with the database service. Please try again shortly.";
+      } else if (error.message.toLowerCase().includes('permission_denied') || (error as any).code === 'permission-denied') {
+         errorMessage = "Failed to register donor: Database permission denied. Please check your Firestore security rules and server configuration.";
+      } else {
+        // Include the original error message for more context if it's not one of the above
+        errorMessage = `Failed to register donor: ${error.message}. Please try again later.`;
+      }
+    }
+    // This error will be caught by the client-side form if the Server Action itself doesn't time out first.
+    throw new Error(errorMessage);
   }
 }
 
@@ -52,6 +66,7 @@ export async function getDonors(): Promise<Donor[]> {
   } catch (error) {
     console.error("Error fetching donors from Firestore: ", error);
     // Depending on usage, you might want to return empty array or re-throw
-    return []; 
+    // For client components, it's often better to return empty or a specific error state.
+    throw new Error("Failed to fetch donors. Please try again later.");
   }
 }
