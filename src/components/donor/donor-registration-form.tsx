@@ -69,10 +69,20 @@ export function DonorRegistrationForm() {
       // form.reset(); // Optionally reset form fields
       router.push('/donors'); 
     } catch (error) {
-      console.error("Donor registration error:", error);
+      console.error("Client-side donor registration error:", error);
+      let description = "Could not register donor. Please try again.";
+      if (error instanceof Error && error.message) {
+        description = error.message;
+      } else if (typeof error === 'string') {
+        // If the error is just a string
+        description = error;
+      } else if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
+        // If it's an object with a message property
+        description = (error as any).message;
+      }
       toast({
         title: "Registration Failed",
-        description: (error as Error).message || "Could not register donor. Please try again.",
+        description: description,
         variant: "destructive",
       });
     } finally {

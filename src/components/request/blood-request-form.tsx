@@ -74,10 +74,18 @@ export function BloodRequestForm() {
       console.log("Request successful, redirecting to /requests");
       router.push('/requests');
     } catch (error) {
-      console.error("Blood request submission error:", error);
+      console.error("Client-side blood request submission error:", error);
+      let description = "Could not post request. Please try again.";
+      if (error instanceof Error && error.message) {
+        description = error.message;
+      } else if (typeof error === 'string') {
+        description = error;
+      } else if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
+        description = (error as any).message;
+      }
       toast({
         title: "Request Failed",
-        description: (error as Error).message || "Could not post request. Please try again.",
+        description: description,
         variant: "destructive",
       });
     } finally {
