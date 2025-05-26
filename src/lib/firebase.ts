@@ -1,7 +1,9 @@
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore'; // Added Firestore import
+import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getDatabase, type Database } from 'firebase/database'; // Added Realtime Database import
+import { getAnalytics, type Analytics } from 'firebase/analytics'; // Added Analytics import
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,12 +13,14 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL, // Ensure this is used
 };
 
 let app: FirebaseApp;
 let auth: Auth;
-let db: Firestore; // Added Firestore instance
+let db: Firestore; // Firestore instance
+let rtdb: Database; // Realtime Database instance
+let analytics: Analytics | undefined; // Analytics instance, can be undefined if not supported
 
 if (getApps().length === 0) {
   app = initializeApp(firebaseConfig);
@@ -26,5 +30,17 @@ if (getApps().length === 0) {
 
 auth = getAuth(app);
 db = getFirestore(app); // Initialize Firestore
+rtdb = getDatabase(app); // Initialize Realtime Database
 
-export { app, auth, db }; // Export db
+// Initialize Analytics only in browser environment
+if (typeof window !== 'undefined') {
+  try {
+    analytics = getAnalytics(app);
+  } catch (error) {
+    console.warn("Firebase Analytics could not be initialized:", error);
+    // This can happen in environments where Analytics is not supported (e.g. server-side during SSR build)
+  }
+}
+
+
+export { app, auth, db, rtdb, analytics }; // Export db, rtdb, and analytics
