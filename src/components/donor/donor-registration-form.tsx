@@ -21,6 +21,7 @@ import type { BloodGroup } from "@/types";
 import { useRouter } from "next/navigation";
 import { addDonor, type NewDonorData } from "@/services/donorService"; // Import Firestore service
 import { Loader2 } from "lucide-react";
+import { useState } from "react"; // Import useState
 
 const phoneRegex = new RegExp(
   /^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/
@@ -38,7 +39,7 @@ const formSchema = z.object({
 export function DonorRegistrationForm() {
   const { toast } = useToast();
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add isSubmitting state
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,7 +52,7 @@ export function DonorRegistrationForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
+    setIsSubmitting(true); // Set loading true
     try {
       const donorData: NewDonorData = {
         name: values.name,
@@ -74,7 +75,7 @@ export function DonorRegistrationForm() {
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Set loading false
     }
   }
 

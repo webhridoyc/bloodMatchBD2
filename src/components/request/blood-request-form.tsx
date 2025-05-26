@@ -59,7 +59,7 @@ export function BloodRequestForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
+    setIsSubmitting(true); // Set loading true
     try {
       const requestData: NewRequestData = {
         ...values,
@@ -81,7 +81,7 @@ export function BloodRequestForm() {
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Set loading false
     }
   }
 
