@@ -1,19 +1,25 @@
+
 import { DonorList } from '@/components/donor/donor-list';
 import { PageTitle } from '@/components/shared/page-title';
-import { mockDonors } from '@/lib/data'; // Using mock data
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import { getDonors as fetchDonorsFromDb } from '@/services/donorService'; // Import Firestore service
+import type { Donor } from '@/types';
 
-// This page will be a server component fetching data, then passing to client component DonorList
-// For now, we use mock data directly.
-async function getDonors() {
-  // Replace with actual data fetching logic in the future
-  return mockDonors;
+// This page will be a server component fetching data from Firestore
+async function getDonorsData(): Promise<Donor[]> {
+  try {
+    const donors = await fetchDonorsFromDb();
+    return donors;
+  } catch (error) {
+    console.error("Failed to fetch donors for DonorsPage:", error);
+    return []; // Return empty array or handle error as appropriate for your UI
+  }
 }
 
 export default async function DonorsPage() {
-  const donors = await getDonors();
+  const donors = await getDonorsData();
 
   return (
     <div className="container mx-auto py-8">

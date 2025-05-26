@@ -1,11 +1,18 @@
+
 import { AiMatcherForm } from '@/components/ai/ai-matcher-form';
 import { PageTitle } from '@/components/shared/page-title';
-import { mockDonors } from '@/lib/data'; // Using mock data
+import { getDonors as fetchDonorsFromDb } from '@/services/donorService'; // Import Firestore service
 import type { Donor } from '@/types';
 
-// Fetch available donors (mocked for now)
+// Fetch available donors from Firestore
 async function getAvailableDonors(): Promise<Donor[]> {
-  return mockDonors;
+  try {
+    const donors = await fetchDonorsFromDb();
+    return donors;
+  } catch (error) {
+    console.error("Failed to fetch donors for AiMatcherPage:", error);
+    return [];
+  }
 }
 
 export default async function AiMatcherPage() {

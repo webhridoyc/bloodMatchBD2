@@ -18,8 +18,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BloodGroupSelect } from "@/components/shared/form-elements";
 import type { BloodGroup } from "@/types";
-import { mockDonors } from "@/lib/data"; // For demo purposes
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation";
+import { addDonor, type NewDonorData } from "@/services/donorService"; // Import Firestore service
+import { Loader2 } from "lucide-react";
 
 const phoneRegex = new RegExp(
   /^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/
@@ -36,27 +37,45 @@ const formSchema = z.object({
 
 export function DonorRegistrationForm() {
   const { toast } = useToast();
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       location: "",
       contact: "",
+      // bloodGroup will be set by BloodGroupSelect
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you'd send this to a server
-    const newDonor = { ...values, id: `DNR${Date.now()}`};
-    mockDonors.push(newDonor); // Adding to mockDonors for demo
-    console.log("New Donor Registered:", newDonor);
-    toast({
-      title: "Registration Successful",
-      description: `${values.name} has been registered as a donor.`,
-    });
-    // form.reset(); // Reset form before redirecting or after, depending on desired UX
-    router.push('/donors'); // Redirect to donors list page
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    try {
+      const donorData: NewDonorData = {
+        name: values.name,
+        bloodGroup: values.bloodGroup,
+        location: values.location,
+        contact: values.contact,
+      };
+      await addDonor(donorData);
+      
+      toast({
+        title: "Registration Successful",
+        description: `${values.name} has been registered as a donor.`,
+      });
+      router.push('/donors'); 
+    } catch (error) {
+      console.error("Donor registration error:", error);
+      toast({
+        title: "Registration Failed",
+        description: (error as Error).message || "Could not register donor. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -121,8 +140,12 @@ export function DonorRegistrationForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Registering..." : "Register"}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registering...</>
+              ) : (
+                "Register"
+              )}
             </Button>
           </form>
         </Form>
