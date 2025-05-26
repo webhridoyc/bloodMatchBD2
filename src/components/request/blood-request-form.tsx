@@ -59,30 +59,29 @@ export function BloodRequestForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true); // Set loading true
+    setIsSubmitting(true); 
     try {
       const requestData: NewRequestData = {
         ...values,
-        postedDate: new Date().toISOString(), // Set current date as ISO string
-        // hospitalName and notes are already included if present due to ...values
+        postedDate: new Date().toISOString(), 
       };
       await addRequest(requestData);
 
       toast({
         title: "Request Posted Successfully",
-        description: `Your blood request for ${values.patientName} has been posted.`,
+        description: `Your blood request for ${values.patientName} has been posted. Redirecting...`,
       });
-      // form.reset(); // Optionally reset form fields
+      console.log("Request successful, redirecting to /requests");
       router.push('/requests');
     } catch (error) {
-      console.error("Blood request error:", error);
+      console.error("Blood request submission error:", error);
       toast({
         title: "Request Failed",
         description: (error as Error).message || "Could not post request. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false); // Set loading false
+      setIsSubmitting(false); 
     }
   }
 
