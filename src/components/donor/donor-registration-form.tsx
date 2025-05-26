@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BloodGroupSelect } from "@/components/shared/form-elements";
 import type { BloodGroup } from "@/types";
 import { mockDonors } from "@/lib/data"; // For demo purposes
+import { useRouter } from "next/navigation"; // Import useRouter
 
 const phoneRegex = new RegExp(
   /^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/
@@ -34,6 +36,7 @@ const formSchema = z.object({
 
 export function DonorRegistrationForm() {
   const { toast } = useToast();
+  const router = useRouter(); // Initialize useRouter
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,7 +55,8 @@ export function DonorRegistrationForm() {
       title: "Registration Successful",
       description: `${values.name} has been registered as a donor.`,
     });
-    form.reset();
+    // form.reset(); // Reset form before redirecting or after, depending on desired UX
+    router.push('/donors'); // Redirect to donors list page
   }
 
   return (

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BloodGroupSelect, UrgencySelect } from "@/components/shared/form-elements";
 import type { BloodGroup, UrgencyLevel } from "@/types";
 import { mockRequests } from "@/lib/data"; // For demo purposes
+import { useRouter } from "next/navigation"; // Import useRouter
 
 const phoneRegex = new RegExp(
   /^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/
@@ -40,14 +42,15 @@ const formSchema = z.object({
 
 export function BloodRequestForm() {
   const { toast } = useToast();
+  const router = useRouter(); // Initialize useRouter
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       patientName: "",
       location: "",
       contact: "",
-      hospitalName: "", // Initialize optional field
-      notes: "",       // Initialize optional field
+      hospitalName: "", 
+      notes: "",       
     },
   });
 
@@ -63,7 +66,8 @@ export function BloodRequestForm() {
       title: "Request Posted Successfully",
       description: `Your blood request for ${values.patientName} has been posted.`,
     });
-    form.reset();
+    // form.reset(); // Reset form before redirecting or after, depending on desired UX
+    router.push('/requests'); // Redirect to requests list page
   }
 
   return (
