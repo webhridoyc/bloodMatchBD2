@@ -19,7 +19,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  swcMinify: true, // Explicitly enable SWC minification
 };
 
 export default nextConfig;
