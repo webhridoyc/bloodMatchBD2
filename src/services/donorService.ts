@@ -25,17 +25,15 @@ export async function addDonor(donorData: NewDonorData): Promise<string> {
   } catch (error: any) {
     console.error("Firestore 'addDonor' service error:", error);
 
-    let errorMessage = "Failed to register donor due to a server-side issue. Please check server logs and try again later.";
     if (error?.code === 'permission-denied') {
-      errorMessage = "Failed to register donor: Firestore permission denied. Please verify your Firestore security rules allow 'create' on the 'donors' collection for authenticated users.";
-    } else if (error instanceof Error) {
-      if (error.message.toLowerCase().includes('deadline_exceeded') || error.message.toLowerCase().includes('timeout')) {
-        errorMessage = "Failed to register donor: The request to the database timed out. This might be a temporary network issue or a problem with the database service. Please try again shortly.";
-      } else {
-        errorMessage = `Failed to register donor: ${error.message}. Please try again later.`;
-      }
+      throw new Error("Failed to register donor: Database permission denied. Please verify your Firestore security rules allow 'create' on the 'donors' collection for authenticated users.");
+    } else if (error?.code === 'deadline-exceeded' || (error instanceof Error && error.message.toLowerCase().includes('timeout'))) {
+       throw new Error("Failed to register donor: The request to the database timed out. This might be a temporary network issue or a problem with the database service. Please try again shortly.");
     }
-    throw new Error(errorMessage);
+    
+    // Generic fallback, trying to get a message from the error
+    const originalErrorMessage = error instanceof Error ? error.message : (typeof error === 'string' && error ? error : "An unknown server error occurred.");
+    throw new Error(`Failed to register donor. Server issue: ${originalErrorMessage}. Please check server logs and try again later.`);
   }
 }
 
