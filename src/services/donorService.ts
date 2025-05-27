@@ -22,16 +22,15 @@ export async function addDonor(donorData: NewDonorData): Promise<string> {
     const docRef = await addDoc(donorsCollectionRef, donorData);
     console.log("Donor (server) added with ID: ", docRef.id);
     return docRef.id;
-  } catch (error) {
-    // Log the detailed error on the server for debugging
+  } catch (error: any) {
     console.error("Firestore 'addDonor' service error:", error);
 
     let errorMessage = "Failed to register donor due to a server-side issue. Please check server logs and try again later.";
-    if (error instanceof Error) {
+    if (error?.code === 'permission-denied') {
+      errorMessage = "Failed to register donor: Firestore permission denied. Please verify your Firestore security rules allow 'create' on the 'donors' collection for authenticated users.";
+    } else if (error instanceof Error) {
       if (error.message.toLowerCase().includes('deadline_exceeded') || error.message.toLowerCase().includes('timeout')) {
         errorMessage = "Failed to register donor: The request to the database timed out. This might be a temporary network issue or a problem with the database service. Please try again shortly.";
-      } else if (error.message.toLowerCase().includes('permission_denied') || (error as any).code === 'permission-denied') {
-         errorMessage = "Failed to register donor: Database permission denied. Please check your Firestore security rules and server configuration.";
       } else {
         errorMessage = `Failed to register donor: ${error.message}. Please try again later.`;
       }

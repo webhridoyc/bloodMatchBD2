@@ -26,8 +26,8 @@ export async function addRequest(requestData: NewRequestData): Promise<string> {
     return docRef.id;
   } catch (error: any) {
     console.error("Error adding blood request to Firestore: ", error);
-    if (error.code === 'permission-denied') {
-      throw new Error("Failed to post blood request: Permission denied. Please check your Firestore security rules.");
+    if (error?.code === 'permission-denied') {
+      throw new Error("Failed to post blood request: Firestore permission denied. Please verify your Firestore security rules allow 'create' on the 'requests' collection for authenticated users.");
     }
     throw new Error("Failed to post blood request. Please try again.");
   }
