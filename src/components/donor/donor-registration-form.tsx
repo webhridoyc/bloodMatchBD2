@@ -19,9 +19,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BloodGroupSelect } from "@/components/shared/form-elements";
 import type { BloodGroup } from "@/types";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react"; // Import Loader2 for loading indicator
-import { addDonor, type NewDonorData } from "@/services/donorService"; // Import Firestore service
-import { useState } from "react"; // Import useState
+import { Loader2 } from "lucide-react";
+import { addDonor, type NewDonorData } from "@/services/donorService";
+import { useState } from "react";
+import { useAuth } from "@/contexts/auth-context";
 
 const phoneRegex = new RegExp(
   /^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/
@@ -39,7 +40,8 @@ const formSchema = z.object({
 export function DonorRegistrationForm() {
   const { toast } = useToast();
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false); // Add isSubmitting state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,37 +49,51 @@ export function DonorRegistrationForm() {
       name: "",
       location: "",
       contact: "",
-      // bloodGroup will be set by BloodGroupSelect
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true); // Set loading to true
+    setIsSubmitting(true);
     try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: values.name,
-          bloodGroup: values.bloodGroup,
-          location: values.location,
-          contact: values.contact,
-        }),
-      });
+      const donorData: NewDonorData = { ...values };
+      await addDonor(donorData);
 
-      if (res.ok) {
-        alert('Donor registered successfully!');
-        form.reset(); // Reset form on success
-        // Consider redirecting the user after a short delay or showing a success message
+      toast({
+        title: "Registration Successful",
+        description: `Thank you, ${values.name}, for registering as a donor. Redirecting...`,
+      });
+      console.log("Donor registration successful, redirecting to /donors");
+      router.push('/donors');
+    } catch (error: any) {
+      console.error('Client-side donor registration error:', error);
+      let description = "Could not register donor. Please try again.";
+
+      if (error instanceof Error) {
+        // Use a more specific message if available and not just a generic fetch error
+        if (error.message && !error.message.toLowerCase().includes("failed to fetch") && !error.message.toLowerCase().includes("error reaching server")) {
+            description = error.message;
+        } else {
+            description = "A server communication error occurred. Please check your network and try again. If the problem persists, check server logs.";
+        }
+      } else if (typeof error === 'string') {
+        description = error;
+      } else if (error && typeof error.message === 'string') {
+        description = error.message;
       } else {
-        const errorData = await res.json();
-        console.error('❌ Registration failed:', errorData);
-        alert(`❌ Registration failed: ${errorData.message || 'Something went wrong.'}`);
+        description = "A server communication error occurred. Please check your network and try again. If the problem persists, check server logs.";
       }
-    } catch (error) {
-      console.error('❌ Error:', error);
+
+      if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string') {
+         description += ` (Server Action Error Digest: ${error.digest}. Check server logs for details.)`;
+      }
+      
+      toast({
+        title: "Registration Failed",
+        description: description,
+        variant: "destructive",
+      });
     } finally {
-      setIsSubmitting(false); // Set loading false
+      setIsSubmitting(false);
     }
   }
 

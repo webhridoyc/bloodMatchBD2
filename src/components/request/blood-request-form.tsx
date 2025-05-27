@@ -20,10 +20,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BloodGroupSelect, UrgencySelect } from "@/components/shared/form-elements";
 import type { BloodGroup, UrgencyLevel } from "@/types";
 import { useRouter } from "next/navigation";
-import { addRequest, type NewRequestData } from "@/services/requestService"; // Import Firestore service
+import { addRequest, type NewRequestData } from "@/services/requestService";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "@/contexts/auth-context"; // Import useAuth
+import { useAuth } from "@/contexts/auth-context";
 
 const phoneRegex = new RegExp(
   /^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/
@@ -47,7 +47,7 @@ export function BloodRequestForm() {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth(); // Get current user from auth context
+  const { user } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,8 +55,8 @@ export function BloodRequestForm() {
       patientName: "",
       location: "",
       contact: "",
-      hospitalName: "", // Ensure optional fields are initialized
-      notes: "",       // Ensure optional fields are initialized
+      hospitalName: "", 
+      notes: "",       
     },
   });
 
@@ -75,26 +75,30 @@ export function BloodRequestForm() {
       });
       console.log("Request successful, redirecting to /requests");
       router.push('/requests');
-    } catch (error: any) { // Use 'any' to access potential 'digest' property
+    } catch (error: any) { 
       console.error("Client-side blood request submission error:", error);
       let description = "Could not post request. Please try again.";
+
       if (error instanceof Error) {
-        description = error.message;
-        // Check for permission denied error specifically
+        // Use a more specific message if available and not just a generic fetch error
+        if (error.message && !error.message.toLowerCase().includes("failed to fetch") && !error.message.toLowerCase().includes("error reaching server")) {
+            description = error.message;
+        } else {
+            description = "A server communication error occurred. Please check your network and try again. If the problem persists, check server logs.";
+        }
         if (error.message.toLowerCase().includes("permission denied")) {
           console.log("Permission denied. Current user auth state:", user);
-          // This description is already specific enough from the service
-          // description = "Permission denied. Please ensure you are logged in and check Firestore security rules.";
         }
       } else if (typeof error === 'string') {
         description = error;
-      } else if (typeof error === 'object' && error !== null && 'message'in error && typeof error.message === 'string') {
+      } else if (error && typeof error.message === 'string') {
         description = error.message;
+      } else {
+        description = "A server communication error occurred. Please check your network and try again. If the problem persists, check server logs.";
       }
-
-      // If it's a Next.js server action error with a digest
+      
       if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string') {
-         description += ` (Server Error Digest: ${error.digest}. Check server logs for details.)`;
+         description += ` (Server Action Error Digest: ${error.digest}. Check server logs for details.)`;
       }
       
       toast({
