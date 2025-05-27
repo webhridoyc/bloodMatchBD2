@@ -122,7 +122,7 @@ export function AppSidebar() {
             <SidebarMenuSub>
               {item.subItems.map(subItem => (
                 <SidebarMenuSubItem key={subItem.label}>
-                  <Link href={subItem.href} passHref legacyBehavior>
+                  <Link href={subItem.href} asChild>
                     <SidebarMenuSubButton isActive={pathname === subItem.href || (subItem.href !== '/' && pathname.startsWith(subItem.href))}>
                       <subItem.icon />
                       <span>{subItem.label}</span>
@@ -140,7 +140,7 @@ export function AppSidebar() {
 
     return (
       <SidebarMenuItem key={item.label}>
-        <Link href={item.href} passHref legacyBehavior>
+        <Link href={item.href} asChild>
           <MenuButtonComponent isActive={isActive} tooltip={isCollapsed ? item.label : undefined}>
             <Icon />
             {!isCollapsed && <span>{item.label}</span>}
