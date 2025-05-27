@@ -19,8 +19,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BloodGroupSelect } from "@/components/shared/form-elements";
 import type { BloodGroup } from "@/types";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react"; // Import Loader2 for loading indicator
 import { addDonor, type NewDonorData } from "@/services/donorService"; // Import Firestore service
-import { Loader2 } from "lucide-react";
 import { useState } from "react"; // Import useState
 
 const phoneRegex = new RegExp(
@@ -52,43 +52,30 @@ export function DonorRegistrationForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true); // Set loading true
+    setIsSubmitting(true); // Set loading to true
     try {
-      const donorData: NewDonorData = {
-        name: values.name,
-        bloodGroup: values.bloodGroup,
-        location: values.location,
-        contact: values.contact,
-      };
-      await addDonor(donorData);
-      
-      toast({
-        title: "Registration Successful",
-        description: `${values.name} has been registered as a donor.`,
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: values.name,
+          bloodGroup: values.bloodGroup,
+          location: values.location,
+          contact: values.contact,
+        }),
       });
-      // form.reset(); // Optionally reset form fields
-      router.push('/donors'); 
-    } catch (error: any) { // Use 'any' to access potential 'digest' property
-      console.error("Client-side donor registration error:", error);
-      let description = "Could not register donor. Please try again.";
-      if (error instanceof Error) {
-        description = error.message;
-      } else if (typeof error === 'string') {
-        description = error;
-      } else if (typeof error === 'object' && error !== null && 'message'in error && typeof error.message === 'string') {
-        description = error.message;
-      }
 
-      // If it's a Next.js server action error with a digest
-      if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string') {
-        description += ` (Server Error Digest: ${error.digest}. Check server logs for details.)`;
+      if (res.ok) {
+        alert('Donor registered successfully!');
+        form.reset(); // Reset form on success
+        // Consider redirecting the user after a short delay or showing a success message
+      } else {
+        const errorData = await res.json();
+        console.error('❌ Registration failed:', errorData);
+        alert(`❌ Registration failed: ${errorData.message || 'Something went wrong.'}`);
       }
-
-      toast({
-        title: "Registration Failed",
-        description: description,
-        variant: "destructive",
-      });
+    } catch (error) {
+      console.error('❌ Error:', error);
     } finally {
       setIsSubmitting(false); // Set loading false
     }
